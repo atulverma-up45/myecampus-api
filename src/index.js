@@ -1,5 +1,7 @@
+import "dotenv/config.js";
 import express from "express";
 import { connectToDatabase } from "./config/database/connectToDB.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -7,7 +9,6 @@ const PORT = process.env.PORT;
 // middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
 
 // health route
 app.get("/", (req, res) => {
@@ -17,6 +18,9 @@ app.get("/", (req, res) => {
   });
 });
 
+// moute the api route with server
+app.use("/api/v1", userRoutes);
+
 connectToDatabase()
   .then(() => {
     app.listen(PORT, () => {
@@ -25,5 +29,5 @@ connectToDatabase()
   })
   .catch((error) => {
     console.log("Error occurred while MySQL connection: ", error);
-    process.exit(0); 
+    process.exit(0);
   });

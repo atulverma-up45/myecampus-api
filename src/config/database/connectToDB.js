@@ -1,4 +1,6 @@
+import "dotenv/config.js"
 import { createPool } from "mysql2/promise.js";
+
 
 const pool = createPool({
   host: process.env.MYSQL_HOST,
@@ -17,7 +19,7 @@ const connectToDatabase = async () => {
     console.log("MySQL Connection Successful");
     connection.release(); 
   } catch (error) {
-    console.error("Database connection Error", error);
+    console.error("Database connection Error", error.message);
     throw error;
   }
 };
