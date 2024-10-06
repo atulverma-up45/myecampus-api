@@ -6,6 +6,7 @@ function isValidEmail(email) {
   return emailPattern.test(email);
 }
 
+// Login user controller
 export const loginController = async (req, res) => {
   try {
     const { reg_No, password, mobile_No, email } = req.body;
@@ -46,7 +47,7 @@ export const loginController = async (req, res) => {
 
     // MySQL query for user validation
     const searchUserQuery = `SELECT * FROM tbl_login_Master WHERE Reg_no = ? AND DOB = ?`;
-    const searchValues = [reg_No.trim(), password.trim()];  // using password as DOB
+    const searchValues = [reg_No.trim(), password.trim()]; // using password as DOB
 
     const [user] = await pool.query(searchUserQuery, searchValues);
 
@@ -63,7 +64,7 @@ export const loginController = async (req, res) => {
     SET Mobile_No = ?, Email = ? 
     WHERE Reg_no = ? AND DOB = ?;
     `;
-    
+
     const updateValues = [
       mobile_No,
       email.trim(),
@@ -87,7 +88,7 @@ export const loginController = async (req, res) => {
     return res.status(200).json({
       status: 200,
       message: "Login and update successful.",
-      userDetails
+      userDetails,
     });
   } catch (error) {
     console.error("Error occurred while logging in the user: ", error);
@@ -98,6 +99,164 @@ export const loginController = async (req, res) => {
   }
 };
 
+// Create Mpin controller
+export const createMpinController = async (req, res) => {
+  try {
+    // fetch the data from the body
+    const { reg_no, password, mpin } = req.body;
+
+    // validate the input
+    if (!reg_no) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Registration Number is Required" });
+    }
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Password is Required" });
+    }
+
+    if (!mpin) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "MPIN is required" });
+    }
+
+    // MySQL query for user validation
+    const searchUserQuery = `SELECT * FROM tbl_login_Master WHERE Reg_no = ? AND DOB = ?`;
+    const searchValues = [reg_no.trim(), password.trim()]; // using password as DOB for now
+
+    const [user] = await pool.query(searchUserQuery, searchValues);
+
+    // If user not found
+    if (user.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message: "User Not Found. Please enter a valid Reg. No. and DOB.",
+      });
+    }
+
+    // Check if the MPIN is already created
+    if (user[0].Mpin) {
+      return res.status(400).json({
+        status: 400,
+        message: "User with Reg. Number already created an MPIN.",
+      });
+    }
+
+    // Create MPIN
+    const createMpinQuery = `
+      UPDATE tbl_login_Master 
+      SET Mpin = ? 
+      WHERE Reg_no = ? AND DOB = ?;
+    `;
+    const mpinValues = [mpin, reg_no.trim(), password.trim()];
+
+    const [createdMpin] = await pool.query(createMpinQuery, mpinValues);
+
+    // Check if update was successful
+    if (createdMpin.affectedRows === 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "Failed to create an MPIN.",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "MPIN created successfully",
+    });
+  } catch (error) {
+    console.error(
+      "Error occurred while creating the MPIN in createMpinController: ",
+      error
+    );
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+
+// Change Mpin controller
+export const changeMpinController = async (req, res) => {
+  try {
+    const { reg_no, password, oldMpin, newMpin } = req.body;
+
+    // validate the input
+    if (!reg_no) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Registration Number is Required" });
+    }
+
+    if (!password) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Password is Required" });
+    }
+    if (!oldMpin) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "Old Mpin is Required" });
+    }
+    if (!newMpin) {
+      return res
+        .status(400)
+        .json({ status: 400, message: "New Mpin is Required" });
+    }
+
+    // search query
+    const searchUserQuery = `SELECT * FROM tbl_login_Master WHERE Reg_no = ? AND DOB = ? AND Mpin = ?`;
+    const searchValues = [reg_no.trim(), password.trim(), oldMpin]; // using password as DOB for now
+
+    const [user] = await pool.query(searchUserQuery, searchValues);
+
+    // If user not found
+    if (user.length === 0) {
+      return res.status(404).json({
+        status: 404,
+        message:
+          "User Not Found. Please enter a valid Reg. No. and DOB. and old Mpin",
+      });
+    }
+
+    // change mpin
+    const changeMpinQuery = `
+     UPDATE tbl_login_Master 
+     SET Mpin = ? 
+     WHERE Reg_no = ? AND DOB = ?;
+   `;
+    const mpinValues = [newMpin, reg_no.trim(), password.trim()];
+
+    const [changedMpin] = await pool.query(changeMpinQuery, mpinValues);
+
+    // Check if update was successful
+    if (changedMpin.affectedRows === 0) {
+      return res.status(400).json({
+        status: 400,
+        message: "Failed to change the MPIN.",
+      });
+    }
+
+    return res.status(200).json({
+      status: 200,
+      message: "MPIN changed successfully successfully",
+    });
+  } catch (error) {
+    console.error(
+      "Error occurred while Change the MPIN in changeMpinController: ",
+      error
+    );
+    return res.status(500).json({
+      status: 500,
+      message: "Internal Server Error",
+    });
+  }
+};
 
 export const getUser = async (req, res) => {
   try {
