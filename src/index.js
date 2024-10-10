@@ -3,6 +3,7 @@ import express from "express";
 import { connectToDatabase } from "./config/database/connectToDB.js";
 import userRoutes from "./routes/userRoutes.js";
 import hallRoutes from "./routes/hallRoutes.js";
+import examRoutes from "./routes/examRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT;
@@ -22,6 +23,7 @@ app.get("/", (req, res) => {
 // moute the api route with server
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", hallRoutes);
+app.use("/api/v1", examRoutes);
 
 connectToDatabase()
   .then(() => {
